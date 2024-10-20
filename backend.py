@@ -1,3 +1,12 @@
+import os
+from dotenv import load_dotenv
+
+# Load the environment variables from .env file
+load_dotenv()
+
+# Access the API key
+api_key = os.getenv('API_KEY')
+
 class VoiceDictationTool:
     """Main class for handling the voice dictation tool with NER functionality."""
 
@@ -10,10 +19,13 @@ class VoiceDictationTool:
 
     def start_recording(self):
         """Start recording the user's voice for the dictated text."""
+        self.audio_recorder.record_audio()
+        print(api_key)
         pass  # Placeholder for logic to start recording
 
     def stop_recording(self):
         """Stop recording and process the audio for transcription and NER."""
+        print("recording done")
         pass  # Placeholder for logic to stop recording and process audio
 
     def update_transcription(self, transcription):
@@ -30,6 +42,7 @@ class AudioRecorder:
 
     def record_audio(self):
         """Record the user's audio input."""
+        print("recording")
         pass  # Placeholder for recording logic
 
     def save_audio(self):
