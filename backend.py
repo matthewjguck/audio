@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 from dotenv import load_dotenv
 
@@ -84,7 +85,7 @@ class NERManager:
         self.memory = {}  # Dictionary to store recognized proper nouns
 
     def extract_proper_nouns(self, transcription):
-        """Extract proper nouns from the transcription using a GPT API.
+        """Extract proper nouns from the transcription using the Gemini API.
         
         Args:
             transcription (str): The transcribed text from the user's dictation.
@@ -92,34 +93,68 @@ class NERManager:
         Returns:
             List[str]: A list of recognized proper nouns.
         """
-        # Prepare the prompt for the GPT API
+        # Prepare the prompt for the Gemini API
         prompt = (
             "Extract all proper nouns from the following text and return them in a list:\n"
-            #f"{transcription}\n"
+            f"{transcription}\n"
             "Please return only the proper nouns."
         )
         
-        response = call_gpt_api(prompt) # Placeholder for API call to GPT
-
+        response = self.call_gpt_api(prompt)  # Call the API to get proper nouns
+        
         # Process the response to extract proper nouns
         proper_nouns = response.split(", ")  # Split by comma and space
+        proper_nouns = [noun.strip() for noun in proper_nouns if noun]
+        self.update_memory(proper_nouns)
 
-        # Optionally, filter or clean the proper nouns
-        proper_nouns = [noun.strip() for noun in proper_nouns if noun]  # Remove any extra whitespace
+        return proper_nouns
 
-        return proper_nouns  # Return the list of proper nouns
+    def call_gpt_api(self, prompt):
+        """Call the Gemini API with the given prompt to extract proper nouns.
+        
+        Args:
+            prompt (str): The prompt to send to the API.
+
+        Returns:
+            str: The response from the Gemini API.
+        """
+        model = genai.GenerativeModel("gemini-1.5-flash")  # Instantiate the Gemini model
+        response = model.generate_content(prompt)  # Call the model with the prompt
+        
+        return response.text  # Return the text content of the response
 
     def read_back_proper_nouns(self, proper_nouns):
-        """Read back recognized proper nouns to the user, spelling them out."""
-        pass  # Placeholder for logic to read and spell out proper nouns
+        """Read back recognized proper nouns to the user, spelling them out.
+        
+        Args:
+            proper_nouns (List[str]): List of recognized proper nouns.
+        """
+        for noun in proper_nouns:
+            print(f"Recognized proper noun: {noun} (spelling: {noun})")  # Placeholder for actual text-to-speech logic
 
     def update_memory(self, proper_nouns):
-        """Update the memory dictionary with new proper nouns."""
-        pass  # Placeholder for logic to update memory with new nouns
+        """Update the memory dictionary with new proper nouns.
+        
+        Args:
+            proper_nouns (List[str]): List of proper nouns to add to memory.
+        """
+        for noun in proper_nouns:
+            if noun not in self.memory:
+                self.memory[noun] = 1  # Initialize count if noun is new
+            else:
+                self.memory[noun] += 1  # Increment count if noun is already in memory
 
     def get_memory(self):
-        """Retrieve the current memory of proper nouns."""
-        return self.memory  # Return the memory dictionary
+        """Retrieve the current memory of proper nouns.
+
+        Returns:
+            dict: The memory dictionary containing proper nouns and their counts.
+        """
+        return self.memory
+    
+    def clear_memory(self):
+        """Clear the memory of proper nouns."""
+        self.memory = {}
 
 
 def main():
