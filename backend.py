@@ -49,18 +49,32 @@ class AudioRecorder:
         """Save the recorded audio to a file."""
         pass  # Placeholder for saving audio logic
 
-
 class Transcriber:
     """Class responsible for transcribing recorded audio."""
 
-    def __init__(self):
+    def __init__(self, api_key):
         """Initialize the transcriber."""
-        pass
+        #api_key is the OpenAI API key for authentication
+        #audio file -- self.audio_file 
+        self.api_key = api_key
+        openai.api_key = self.api_key
 
-    def transcribe_audio(self, audio_file):
-        """Transcribe the provided audio file to text."""
-        return "Transcribed text goes here."  # Example return value
-
+    def transcribe_audio(self, audio_file): 
+        try:
+            with open(audio_file, "rb") as audio:
+                transcript = openai.Audio.transcribe(
+                    model="whisper-1",
+                    file=audio,
+                    response_format="text",
+                    language='en' 
+                )
+            return transcript
+        
+        except Exception as e:
+            print(f"An error occurred while transcribing: {e}")
+            return None
+            
+        #return "Transcribed text goes here."  
 
 class NERManager:
     """Class for managing Named Entity Recognition and memory of proper nouns."""
