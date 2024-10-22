@@ -38,17 +38,13 @@ class AudioRecorder:
 
 class Transcriber:
     """Class responsible for transcribing recorded audio."""
-
     
-    def __init__(self, api_ket):
+    def __init__(self, api_key):
         """Initialize the transcriber."""
         #api_key is the OpenAI API key for authentication
         #audio file -- self.audio_file 
         self.api_key = api_key
         openai.api_key = self.api_key
-
-        pass
-
 
     def transcribe_audio(self, audio_file): 
         try:
@@ -66,9 +62,6 @@ class Transcriber:
             return None
             
         #return "Transcribed text goes here."  
-         
- 
-
 
 class FeedbackManager:
     """Class for managing different feedback options for the user."""
