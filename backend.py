@@ -13,7 +13,7 @@ class VoiceDictationTool:
     def __init__(self):
         """Initialize the VoiceDictationTool with necessary parameters."""
         self.audio_recorder = AudioRecorder()  # Class responsible for recording audio
-        self.transcriber = Transcriber()        # Class responsible for transcribing audio
+        self.transcriber = Transcriber(api_key)        # Class responsible for transcribing audio
         self.ner_manager = NERManager()        # Class for handling NER and memory management
         self.transcription = ""  # Store the transcribed text
 
@@ -57,7 +57,7 @@ class Transcriber:
         #api_key is the OpenAI API key for authentication
         #audio file -- self.audio_file 
         self.api_key = api_key
-        openai.api_key = self.api_key
+        #openai.api_key = self.api_key
 
     def transcribe_audio(self, audio_file): 
         try:

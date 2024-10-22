@@ -2,6 +2,7 @@
 .env
 
 venv/
+.venv/
 
 # Ignore __pycache__ folders and compiled Python files
 __pycache__/
