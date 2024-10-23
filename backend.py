@@ -11,6 +11,10 @@ google_key = os.getenv('GOOGLE_KEY')
 import google.generativeai as genai
 import openai
 
+import pyaudio
+import wave
+import threading
+
 class VoiceDictationTool:
     """Main class for handling the voice dictation tool with NER functionality."""
 
@@ -47,10 +51,6 @@ class VoiceDictationTool:
         """Update the frontend text box with the current transcription."""
         pass  # Placeholder for frontend update logic
 
-
-import pyaudio
-import wave
-import threading
 
 class AudioRecorder:
     """Class responsible for recording audio from the user."""
