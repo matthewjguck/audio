@@ -33,21 +33,60 @@ class VoiceDictationTool:
         pass  # Placeholder for frontend update logic
 
 
+import pyaudio
+import wave
+
 class AudioRecorder:
     """Class responsible for recording audio from the user."""
 
-    def __init__(self):
+    def __init__(self, audio_file="output.wav"):
         """Initialize the audio recorder."""
-        self.audio_file = "output.wav"  # Placeholder for audio file path
+        self.audio_file = audio_file  # Path for the output file
+        self.chunk = 1024  # Buffer size for audio chunks
+        self.format = pyaudio.paInt16  # Audio format (16-bit resolution)
+        self.channels = 1  # Number of channels (mono)
+        self.rate = 44100  # Sample rate (44.1 kHz)
 
-    def record_audio(self):
+        self.audio = pyaudio.PyAudio()  # Create an instance of PyAudio
+        self.frames = []  # List to store audio data during recording
+
+    def record_audio(self, record_seconds=5):
         """Record the user's audio input."""
-        print("recording")
-        pass  # Placeholder for recording logic
+        print("Recording started...")
+
+        # Open a new stream to record audio
+        stream = self.audio.open(format=self.format,
+                                 channels=self.channels,
+                                 rate=self.rate,
+                                 input=True,
+                                 frames_per_buffer=self.chunk)
+
+        self.frames = []  # Clear previous audio frames
+
+        for _ in range(0, int(self.rate / self.chunk * record_seconds)):
+            data = stream.read(self.chunk)
+            self.frames.append(data)
+
+        # Stop and close the stream
+        stream.stop_stream()
+        stream.close()
+
+        print("Recording finished.")
 
     def save_audio(self):
         """Save the recorded audio to a file."""
-        pass  # Placeholder for saving audio logic
+        # Open a .wav file for writing
+        with wave.open(self.audio_file, 'wb') as wf:
+            wf.setnchannels(self.channels)  # Set number of channels (mono)
+            wf.setsampwidth(self.audio.get_sample_size(self.format))  # Set sample width
+            wf.setframerate(self.rate)  # Set sample rate
+            wf.writeframes(b''.join(self.frames))  # Write audio frames to file
+
+        print(f"Audio saved to {self.audio_file}")
+
+    def __del__(self):
+        """Ensure the PyAudio object is properly terminated."""
+        self.audio.terminate()
 
 class Transcriber:
     """Class responsible for transcribing recorded audio."""
