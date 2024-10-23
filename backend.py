@@ -7,6 +7,9 @@ load_dotenv()
 # Access the API key
 api_key = os.getenv('API_KEY')
 
+import google.generativeai as genai
+import openai
+
 class VoiceDictationTool:
     """Main class for handling the voice dictation tool with NER functionality."""
 
@@ -99,6 +102,7 @@ class NERManager:
             "Please return only the proper nouns."
         )
         
+        
         response = self.call_gpt_api(prompt)  # Call the API to get proper nouns
         
         # Process the response to extract proper nouns
@@ -117,7 +121,8 @@ class NERManager:
         Returns:
             str: The response from the Gemini API.
         """
-        model = genai.GenerativeModel("gemini-1.5-flash")  # Instantiate the Gemini model
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        model = genai.GenerativeModel("gemini-1.5-flash", api_key=gemini_api_key)  # Instantiate the Gemini model
         response = model.generate_content(prompt)  # Call the model with the prompt
         
         return response.text  # Return the text content of the response
