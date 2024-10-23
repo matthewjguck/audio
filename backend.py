@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Access the API key
-api_key = os.getenv('API_KEY')
+openai_key = os.getenv('OPENAI_KEY')
+google_key = os.getenv('GOOGLE_KEY')
 
 import google.generativeai as genai
 import openai
@@ -16,20 +17,31 @@ class VoiceDictationTool:
     def __init__(self):
         """Initialize the VoiceDictationTool with necessary parameters."""
         self.audio_recorder = AudioRecorder()  # Class responsible for recording audio
-        self.transcriber = Transcriber(api_key)        # Class responsible for transcribing audio
+        self.transcriber = Transcriber(google_key)        # Class responsible for transcribing audio
         self.ner_manager = NERManager()        # Class for handling NER and memory management
         self.transcription = ""  # Store the transcribed text
 
     def start_recording(self):
         """Start recording the user's voice for the dictated text."""
         self.audio_recorder.record_audio()
-        print(api_key)
         pass  # Placeholder for logic to start recording
 
     def stop_recording(self):
         """Stop recording and process the audio for transcription and NER."""
-        print("recording done")
-        pass  # Placeholder for logic to stop recording and process audio
+        print("Recording stopped...")
+        
+        self.audio_recorder.save_audio()
+
+        self.transcription = self.transcriber.transcribe_audio(self.audio_recorder.audio_file)
+        if self.transcription:
+            print(f"Transcription: {self.transcription}")
+            
+            self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
+            print(f"Proper Nouns: {self.proper_nouns}")
+        else:
+            print("Transcription failed.")
+
+        return self.transcription, self.proper_nouns
 
     def update_transcription(self, transcription):
         """Update the frontend text box with the current transcription."""
@@ -38,68 +50,88 @@ class VoiceDictationTool:
 
 import pyaudio
 import wave
+import threading
 
 class AudioRecorder:
     """Class responsible for recording audio from the user."""
 
-    def __init__(self, audio_file="output.wav"):
+    def __init__(self):
         """Initialize the audio recorder."""
-        self.audio_file = audio_file  # Path for the output file
-        self.chunk = 1024  # Buffer size for audio chunks
-        self.format = pyaudio.paInt16  # Audio format (16-bit resolution)
-        self.channels = 1  # Number of channels (mono)
+        self.audio_file = "output.wav"  # Placeholder for audio file path
+        self.chunk = 1024  # Number of frames per buffer
+        self.format = pyaudio.paInt16  # Audio format (16-bit)
+        self.channels = 1  # Mono audio
         self.rate = 44100  # Sample rate (44.1 kHz)
+        self.frames = []  # Placeholder to store audio data
+        self.is_recording = False  # Flag to monitor recording status
 
-        self.audio = pyaudio.PyAudio()  # Create an instance of PyAudio
-        self.frames = []  # List to store audio data during recording
+        self.audio = pyaudio.PyAudio()  # Initialize PyAudio
 
-    def record_audio(self, record_seconds=5):
-        """Record the user's audio input."""
-        print("Recording started...")
+    def start_recording(self):
+        """Start recording the user's audio input in a separate thread."""
+        if not self.is_recording:
+            self.is_recording = True
+            self.frames = []  # Clear previous audio frames
+            self.recording_thread = threading.Thread(target=self.record_audio)
+            self.recording_thread.start()
+            print("Recording started...")
 
-        # Open a new stream to record audio
-        stream = self.audio.open(format=self.format,
-                                 channels=self.channels,
-                                 rate=self.rate,
-                                 input=True,
-                                 frames_per_buffer=self.chunk)
+    def record_audio(self):
+        """Record audio in the background until stopped."""
+        try:
+            stream = self.audio.open(format=self.format,
+                                     channels=self.channels,
+                                     rate=self.rate,
+                                     input=True,
+                                     frames_per_buffer=self.chunk)
 
-        self.frames = []  # Clear previous audio frames
+            while self.is_recording:
+                data = stream.read(self.chunk, exception_on_overflow=False)  # Safeguard against overflow
+                self.frames.append(data)
 
-        for _ in range(0, int(self.rate / self.chunk * record_seconds)):
-            data = stream.read(self.chunk)
-            self.frames.append(data)
+            # Stop and close the stream
+            stream.stop_stream()
+            stream.close()
+            print("Recording finished.")
 
-        # Stop and close the stream
-        stream.stop_stream()
-        stream.close()
+        except Exception as e:
+            print(f"Error during recording: {e}")
+            self.is_recording = False  # Stop recording in case of an error
 
-        print("Recording finished.")
+    def stop_recording(self):
+        """Stop the recording."""
+        if self.is_recording:
+            self.is_recording = False
+            self.recording_thread.join()  # Wait for the recording thread to finish
+            print("Recording stopped.")
 
     def save_audio(self):
         """Save the recorded audio to a file."""
-        # Open a .wav file for writing
-        with wave.open(self.audio_file, 'wb') as wf:
-            wf.setnchannels(self.channels)  # Set number of channels (mono)
-            wf.setsampwidth(self.audio.get_sample_size(self.format))  # Set sample width
-            wf.setframerate(self.rate)  # Set sample rate
-            wf.writeframes(b''.join(self.frames))  # Write audio frames to file
+        if not self.frames:
+            print("No audio data to save.")
+            return
 
-        print(f"Audio saved to {self.audio_file}")
-
-    def __del__(self):
-        """Ensure the PyAudio object is properly terminated."""
-        self.audio.terminate()
+        # Save the recorded frames as a .wav file
+        try:
+            wf = wave.open(self.audio_file, 'wb')
+            wf.setnchannels(self.channels)
+            wf.setsampwidth(self.audio.get_sample_size(self.format))
+            wf.setframerate(self.rate)
+            wf.writeframes(b''.join(self.frames))
+            wf.close()
+            print(f"Audio saved to {self.audio_file}")
+        except Exception as e:
+            print(f"Error saving audio: {e}")
 
 class Transcriber:
     """Class responsible for transcribing recorded audio."""
 
-    def __init__(self, api_key):
+    def __init__(self, google_key):
         """Initialize the transcriber."""
-        #api_key is the OpenAI API key for authentication
+        #google_key is the OpenAI API key for authentication
         #audio file -- self.audio_file 
-        self.api_key = api_key
-        #openai.api_key = self.api_key
+        self.google_key = google_key
+        #openai.google_key = self.google_key
 
     def transcribe_audio(self, audio_file): 
         try:
@@ -160,8 +192,8 @@ class NERManager:
         Returns:
             str: The response from the Gemini API.
         """
-        gemini_api_key = os.getenv('GEMINI_API_KEY')
-        model = genai.GenerativeModel("gemini-1.5-flash", api_key=gemini_api_key)  # Instantiate the Gemini model
+        gemini_google_key = os.getenv('GEMINI_google_key')
+        model = genai.GenerativeModel("gemini-1.5-flash", google_key=gemini_google_key)  # Instantiate the Gemini model
         response = model.generate_content(prompt)  # Call the model with the prompt
         
         return response.text  # Return the text content of the response
@@ -204,19 +236,6 @@ def main():
     """Main function to run the voice dictation tool."""
     dictation_tool = VoiceDictationTool()
     
-    # Simulated user interface (would be replaced with frontend button interactions)
-    while True:
-        user_input = input("Type 'start' to begin recording, 'stop' to end recording, or 'exit' to quit: ")
-
-        if user_input.lower() == 'start':
-            dictation_tool.start_recording()  # Start recording audio
-        elif user_input.lower() == 'stop':
-            dictation_tool.stop_recording()    # Stop recording and process audio
-        elif user_input.lower() == 'exit':
-            print("Exiting the voice dictation tool.")
-            break
-        else:
-            print("Invalid command. Please enter 'start', 'stop', or 'exit'.")
 
 if __name__ == "__main__":
     main()

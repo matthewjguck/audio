@@ -84,6 +84,7 @@ class VoiceDictationToolGUI(QWidget):
         self.start_button.setText('Start')  # Change button text back to "Start"
         self.start_button.setEnabled(True)  # Re-enable the button
 
+
     def format_transcription(self, text):
         """Format the transcribed text to make each word clickable."""
         words = text.split()
