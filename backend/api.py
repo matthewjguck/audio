@@ -27,20 +27,16 @@ class VoiceDictationTool:
 
     def stop_recording(self):
         """Stop recording and process the audio for transcription and NER."""
+
         print("Recording stopped...")
         self.audio_recorder.stop_recording()
         self.audio_recorder.save_audio()
 
         self.transcription = self.transcriber.transcribe_audio(self.audio_recorder.audio_file)
-        if not self.transcription:
-            print("No transcription detected. Using default transcription for testing.")
-            self.transcription = "I'm Mark Smith in Stanford in Palo Alto"
-        
         if self.transcription:
             print(f"Transcription: {self.transcription}")
             self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
             print(f"Proper Nouns: {self.proper_nouns}")
         else:
             print("Transcription failed.")
-        
         return self.transcription, self.proper_nouns
