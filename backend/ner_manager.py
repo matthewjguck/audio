@@ -5,7 +5,7 @@ class NERManager:
     """Class for managing Named Entity Recognition and memory of proper nouns."""
 
     def __init__(self):
-        genai.configure(api_key=os.getenv('API_KEY'))
+        
         self.memory = {}
 
     def extract_proper_nouns(self, transcription):
