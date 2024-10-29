@@ -28,6 +28,12 @@ class VoiceDictationToolGUI(QWidget):
         self.output_text.anchorClicked.connect(self.on_word_click)  # Connect word click handler
         layout.addWidget(self.output_text)
 
+        # Proper nouns display area
+        self.proper_nouns_text = QTextBrowser(self)
+        self.proper_nouns_text.setPlaceholderText("Proper nouns will appear here...")
+        self.proper_nouns_text.setOpenExternalLinks(False)
+        layout.addWidget(self.proper_nouns_text)
+
         # Start/Stop button
         self.start_button = QPushButton('Start', self)
         self.start_button.clicked.connect(self.on_start_stop_click)  # Connect to start/stop recording
@@ -41,7 +47,7 @@ class VoiceDictationToolGUI(QWidget):
 
         # Set the layout to the window
         self.setLayout(layout)
-        self.setGeometry(300, 300, 400, 300)
+        self.setGeometry(300, 300, 400, 400)
 
     def on_start_stop_click(self):
         """Handle the Start/Stop button click."""
@@ -66,18 +72,23 @@ class VoiceDictationToolGUI(QWidget):
         self.is_recording = False
         self.start_button.setEnabled(False)  # Disable button to prevent multiple clicks
 
-        self.on_recording_finished()
+        # Stop the recording in the background with a delay
+        QTimer.singleShot(100, self.on_recording_finished)  # Delay of 100 ms before processing
 
     def on_recording_finished(self):
         """Handle the process after recording is finished."""
-        self.dictation_tool.stop_recording()  # Stop recording and transcribe
-        transcription = self.dictation_tool.transcription  # Get the transcribed text
+        # Stop recording and get the transcription and proper nouns
+        transcription, proper_nouns = self.dictation_tool.stop_recording()
 
-        # Split transcription into words and make them clickable
-        formatted_text = self.format_transcription(transcription)
+        # Format transcription into clickable words
+        formatted_text = self.format_transcription(transcription) if transcription else "Transcription failed."
 
         # Update the text box with the formatted clickable transcription
         self.output_text.setHtml(formatted_text)
+
+        # Display proper nouns below transcription
+        proper_nouns_text = ', '.join(proper_nouns) if proper_nouns else "No proper nouns detected."
+        self.proper_nouns_text.setText(proper_nouns_text)
 
         # Hide the busy indicator and re-enable the button
         self.busy_indicator.setVisible(False)
