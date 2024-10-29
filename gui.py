@@ -2,14 +2,14 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextBrowser, QProgressBar
 from PyQt5.QtCore import QTimer, QUrl
 from PyQt5.QtGui import QColor
-import backend
+from backend.api import VoiceDictationTool
 
 class VoiceDictationToolGUI(QWidget):
     """GUI for Voice Dictation Tool with NER functionality."""
 
     def __init__(self):
         super().__init__()
-        self.dictation_tool = backend.VoiceDictationTool()  # Instantiate the voice dictation tool
+        self.dictation_tool = VoiceDictationTool()  # Instantiate the voice dictation tool
         self.is_recording = False  # Track whether we are recording
         self.initUI()
         self.marked_words = set()  # Set to track which words have been marked

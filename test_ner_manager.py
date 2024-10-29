@@ -1,11 +1,15 @@
 import unittest
-from backend import NERManager
+from backend.ner_manager import NERManager
+import os
+from dotenv import load_dotenv
+load_dotenv()
+google_key = os.getenv('GOOGLE_KEY')
 
 
 class TestNERManager(unittest.TestCase):
     def setUp(self):
         """Set up the NERManager instance before each test."""
-        self.ner_manager = NERManager()
+        self.ner_manager = NERManager(google_key)
 
     def test_extract_proper_nouns(self):
         """Test the extraction of proper nouns from a transcription."""
