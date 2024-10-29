@@ -16,7 +16,7 @@ class VoiceDictationTool:
     def __init__(self):
         """Initialize the VoiceDictationTool with necessary parameters."""
         self.audio_recorder = AudioRecorder()
-        self.transcriber = Transcriber(openai_key)
+        self.transcriber = Transcriber()
         self.ner_manager = NERManager()
         self.transcription = ""
         self.proper_nouns = []

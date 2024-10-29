@@ -1,25 +1,29 @@
-import openai
+import speech_recognition
 import os
 
 class Transcriber:
-    """Class responsible for transcribing recorded audio."""
+    """Class responsible for transcribing recorded audio using Google Web Speech API."""
 
-    def __init__(self, openai_key):
-        """Initialize the transcriber with the OpenAI API key."""
-        openai.api_key = openai_key
+    def __init__(self):
+        """Initialize the recognizer for Google Web Speech API."""
+        self.recognizer = speech_recognition.Recognizer()
 
-    def transcribe_audio(self, audio_file): 
-        """Transcribe the given audio file using OpenAI's Whisper API."""
-        print(os.path.exists(audio_file))
+    def transcribe_audio(self, audio_file):
+        """Transcribe the given audio file using Google Web Speech API."""
         try:
-            with open(audio_file, "rb") as audio:
-                transcript = openai.Audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio,
-                    response_format="text"
-                )
-                print(transcript)
-            return transcript['text'] if 'text' in transcript else ""
-        except Exception as e:
-            print(f"An error occurred while transcribing: {e}")
-            return None
+            # Load the audio file
+            with speech_recognition.AudioFile(audio_file) as source:
+                audio = self.recognizer.record(source)  # Record the audio from the file
+
+            # Use Google Web Speech API to transcribe the audio
+            text = self.recognizer.recognize_google(audio)
+            return text  # Return the transcribed text
+
+        except speech_recognition.UnknownValueError:
+            print("Google Web Speech API could not understand the audio")
+            return "Transcription failed: Audio not understood."
+
+        except speech_recognition.RequestError as e:
+            print(f"Could not request results from Google Web Speech API; {e}")
+            return f"Transcription failed: {e}"
+
