@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from .recorder import AudioRecorder
 from .transcriber import Transcriber
 from .ner_manager import NERManager
+from .playback import Playback
 import google.generativeai as genai
 
 # Load environment variables
@@ -17,6 +18,7 @@ class VoiceDictationTool:
         self.audio_recorder = AudioRecorder()
         self.transcriber = Transcriber()
         self.ner_manager = NERManager()
+        self.playback = Playback()
         self.transcription = ""
         self.proper_nouns = []
 
@@ -36,6 +38,8 @@ class VoiceDictationTool:
             print(f"Transcription: {self.transcription}")
             self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
             print(f"Proper Nouns: {self.proper_nouns}")
+            self.playback.playback_transcription(self.transcription)
+            self.playback.cleanup()
         else:
             print("Transcription failed.")
         return self.transcription, self.proper_nouns
