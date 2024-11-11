@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextBrowser, QProgressBar
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTextBrowser, QProgressBar, QLabel, QRadioButton, QButtonGroup
 from PyQt5.QtCore import QTimer, QUrl
 from PyQt5.QtGui import QColor
 from backend.api import VoiceDictationTool
@@ -44,6 +44,32 @@ class VoiceDictationToolGUI(QWidget):
         self.busy_indicator.setRange(0, 0)  # Makes it indefinite (busy indicator)
         self.busy_indicator.setVisible(False)  # Hide it initially
         layout.addWidget(self.busy_indicator)
+
+        # Bottom Layout for WER and Radio Buttons
+        bottom_layout = QHBoxLayout()
+
+        # WER display label
+        self.wer_label = QLabel("WER: 0.00%", self)
+        bottom_layout.addWidget(self.wer_label)
+
+        # Radio buttons
+        self.radio_button1 = QRadioButton("Repeat Only")
+        self.radio_button2 = QRadioButton("Repeat + Noun Check")
+        self.radio_button3 = QRadioButton("Noun Check Only")
+
+        # Group radio buttons together for exclusive selection
+        self.radio_group = QButtonGroup(self)
+        self.radio_group.addButton(self.radio_button1)
+        self.radio_group.addButton(self.radio_button2)
+        self.radio_group.addButton(self.radio_button3)
+
+        # Add radio buttons to the bottom layout
+        bottom_layout.addWidget(self.radio_button1)
+        bottom_layout.addWidget(self.radio_button2)
+        bottom_layout.addWidget(self.radio_button3)
+
+        # Add the bottom layout to the main layout
+        layout.addLayout(bottom_layout)
 
         # Set the layout to the window
         self.setLayout(layout)
