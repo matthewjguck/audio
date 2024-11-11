@@ -166,6 +166,9 @@ class VoiceDictationToolGUI(QWidget):
             else:
                 # Make the word clickable if not marked
                 formatted_words.append(f'<a href="{idx}">{word}</a>')
+
+        rate = len(self.marked_words)/len(words) * 100
+        self.wer_label.setText(f'WER: {rate}')
         return ' '.join(formatted_words)
 
 
