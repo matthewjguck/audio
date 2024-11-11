@@ -116,20 +116,31 @@ class VoiceDictationToolGUI(QWidget):
         if word_idx < len(words):
             clicked_word = words[word_idx]
 
-            # Toggle marking the word in red
-            if clicked_word not in self.marked_words:
-                self.marked_words.add(clicked_word)
-                words[word_idx] = f'<span style="color: red; text-decoration: underline;">{clicked_word}</span>'
+            # Use (index, word) tuple to uniquely identify each word instance
+            word_key = (word_idx, clicked_word)
+
+            # Toggle marking the word in red or removing the mark
+            if word_key in self.marked_words:
+                self.marked_words.remove(word_key)  # Unmark the word
             else:
-                self.marked_words.remove(clicked_word)
-                words[word_idx] = f'<a href="{word_idx}">{clicked_word}</a>'
+                self.marked_words.add(word_key)  # Mark the word
 
         # Update the text box with the modified word list
-        formatted_text = ' '.join(words)
+        formatted_text = self.get_formatted_text(words)
         self.output_text.setHtml(formatted_text)
 
-        # (Future) Connect to WER backend to handle error processing for the clicked word
-        # Example: self.dictation_tool.mark_word_for_error(clicked_word)
+    def get_formatted_text(self, words):
+        """Generate HTML for the transcription with marked words in red."""
+        formatted_words = []
+        for idx, word in enumerate(words):
+            word_key = (idx, word)
+            if word_key in self.marked_words:
+                # Make the word clickable and apply red color if marked
+                formatted_words.append(f'<a href="{idx}" style="color: red; text-decoration: underline;">{word}</a>')
+            else:
+                # Make the word clickable if not marked
+                formatted_words.append(f'<a href="{idx}">{word}</a>')
+        return ' '.join(formatted_words)
 
 
 # Main execution for running the GUI
