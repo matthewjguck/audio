@@ -39,10 +39,13 @@ class VoiceDictationTool:
             print(f"Transcription: {self.transcription}")
             self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
             print(f"Proper Nouns: {self.proper_nouns}")
-            self.playback.playback_transcription(self.transcription)
 
-            if self.proper_nouns_enabled:
-                print("Proper nouns enabled.")
+            if self.proper_nouns_enabled == 0:
+                self.playback.playback_transcription(self.transcription)
+            elif self.proper_nouns_enabled == 1:
+                self.playback.playback_transcription(self.transcription)
+                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
+            elif self.proper_nouns_enabled == 2:
                 self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
                 
             self.playback.cleanup()

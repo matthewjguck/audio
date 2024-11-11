@@ -105,9 +105,12 @@ class VoiceDictationToolGUI(QWidget):
     def on_recording_finished(self):
         """Handle the process after recording is finished."""
         if self.radio_button2.isChecked():  # Repeat + Noun Check
-            self.dictation_tool.proper_nouns_enabled = True
+            self.dictation_tool.proper_nouns_enabled = 1  # Transcription + Noun Check
         elif self.radio_button1.isChecked():  # Repeat Only
-            self.dictation_tool.proper_nouns_enabled = False
+            self.dictation_tool.proper_nouns_enabled = 0  # Transcription only
+        elif self.radio_button3.isChecked():  # Noun Check Only
+            self.dictation_tool.proper_nouns_enabled = 2  # Noun Check only
+        
         # Stop recording and get the transcription and proper nouns
         transcription, proper_nouns = self.dictation_tool.stop_recording()
 
