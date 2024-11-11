@@ -10,7 +10,7 @@ class VoiceDictationToolGUI(QWidget):
 
     def __init__(self, proper_nouns=False):
         super().__init__()
-        self.dictation_tool = VoiceDictationTool(proper_nouns=proper_nouns)  # Instantiate the voice dictation tool
+        self.dictation_tool = VoiceDictationTool()  # Instantiate the voice dictation tool
         self.is_recording = False  # Track whether we are recording
         self.initUI()
         self.marked_words = set()  # Set to track which words have been marked
@@ -104,6 +104,10 @@ class VoiceDictationToolGUI(QWidget):
 
     def on_recording_finished(self):
         """Handle the process after recording is finished."""
+        if self.radio_button2.isChecked():  # Repeat + Noun Check
+            self.dictation_tool.proper_nouns_enabled = True
+        elif self.radio_button1.isChecked():  # Repeat Only
+            self.dictation_tool.proper_nouns_enabled = False
         # Stop recording and get the transcription and proper nouns
         transcription, proper_nouns = self.dictation_tool.stop_recording()
 
@@ -121,7 +125,6 @@ class VoiceDictationToolGUI(QWidget):
         self.busy_indicator.setVisible(False)
         self.start_button.setText('Start')  # Change button text back to "Start"
         self.start_button.setEnabled(True)  # Re-enable the button
-
 
     def format_transcription(self, text):
         """Format the transcribed text to make each word clickable."""
@@ -172,16 +175,10 @@ class VoiceDictationToolGUI(QWidget):
         self.wer_label.setText(f'WER: {rate}')
         return ' '.join(formatted_words)
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Voice Dictation Tool")
-    parser.add_argument('--proper_nouns', action='store_true', 
-                        help="Enable proper noun playback after transcription")
-    return parser.parse_args()
 
 # Main execution for running the GUI
 if __name__ == "__main__":
-    args = parse_args()
     app = QApplication(sys.argv)
-    gui = VoiceDictationToolGUI(proper_nouns=args.proper_nouns)
+    gui = VoiceDictationToolGUI()
     gui.show()
     sys.exit(app.exec_())
