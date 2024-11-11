@@ -12,8 +12,9 @@ class NERManager:
         prompt = (
             "Extract all proper nouns from the following text and return them in a list:\n"
             f"{transcription}\n"
-            "Please return only the proper nouns."
-            "For example, if the text is John and Mary are students at Stanford, you would return just: ['John', 'Mary', 'Stanford']."
+            "Please return only the proper nouns, with no additional words."
+            "For example, if the text is John and Mary are students at Stanford, you would return: ['John', 'Mary', 'Stanford']."
+            "If there are no proper nouns, return an empty list."
         )
         response = self.call_gpt_api(prompt)
         if response:

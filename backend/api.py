@@ -13,7 +13,7 @@ genai.configure(api_key=os.getenv('GOOGLE_KEY'))
 class VoiceDictationTool:
     """Main class for handling the voice dictation tool with NER functionality."""
 
-    def __init__(self):
+    def __init__(self, proper_nouns=False):
         """Initialize the VoiceDictationTool with necessary parameters."""
         self.audio_recorder = AudioRecorder()
         self.transcriber = Transcriber()
@@ -21,6 +21,7 @@ class VoiceDictationTool:
         self.playback = Playback()
         self.transcription = ""
         self.proper_nouns = []
+        self.proper_nouns_enabled = proper_nouns
 
     def start_recording(self):
         """Start recording the user's voice for the dictated text."""
@@ -39,6 +40,9 @@ class VoiceDictationTool:
             self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
             print(f"Proper Nouns: {self.proper_nouns}")
             self.playback.playback_transcription(self.transcription)
+            if self.proper_nouns_enabled:
+                print("Proper nouns enabled.")
+                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
             self.playback.cleanup()
         else:
             print("Transcription failed.")

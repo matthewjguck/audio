@@ -3,13 +3,14 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from PyQt5.QtCore import QTimer, QUrl
 from PyQt5.QtGui import QColor
 from backend.api import VoiceDictationTool
+import argparse
 
 class VoiceDictationToolGUI(QWidget):
     """GUI for Voice Dictation Tool with NER functionality."""
 
-    def __init__(self):
+    def __init__(self, proper_nouns=False):
         super().__init__()
-        self.dictation_tool = VoiceDictationTool()  # Instantiate the voice dictation tool
+        self.dictation_tool = VoiceDictationTool(proper_nouns=proper_nouns)  # Instantiate the voice dictation tool
         self.is_recording = False  # Track whether we are recording
         self.initUI()
         self.marked_words = set()  # Set to track which words have been marked
@@ -171,10 +172,16 @@ class VoiceDictationToolGUI(QWidget):
         self.wer_label.setText(f'WER: {rate}')
         return ' '.join(formatted_words)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Voice Dictation Tool")
+    parser.add_argument('--proper_nouns', action='store_true', 
+                        help="Enable proper noun playback after transcription")
+    return parser.parse_args()
 
 # Main execution for running the GUI
 if __name__ == "__main__":
+    args = parse_args()
     app = QApplication(sys.argv)
-    gui = VoiceDictationToolGUI()
+    gui = VoiceDictationToolGUI(proper_nouns=args.proper_nouns)
     gui.show()
     sys.exit(app.exec_())
