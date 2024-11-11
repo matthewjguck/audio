@@ -1,4 +1,4 @@
-import speech_recognition
+import speech_recognitions
 import os
 
 class Transcriber:
