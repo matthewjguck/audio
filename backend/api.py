@@ -5,6 +5,7 @@ from .transcriber import Transcriber
 from .ner_manager import NERManager
 from .playback import Playback
 import google.generativeai as genai
+from .utils import spell_out 
 
 # Load environment variables
 load_dotenv()
@@ -13,7 +14,7 @@ genai.configure(api_key=os.getenv('GOOGLE_KEY'))
 class VoiceDictationTool:
     """Main class for handling the voice dictation tool with NER functionality."""
 
-    def __init__(self):
+    def __init__(self, proper_nouns=False):
         """Initialize the VoiceDictationTool with necessary parameters."""
         self.audio_recorder = AudioRecorder()
         self.transcriber = Transcriber()
@@ -21,6 +22,7 @@ class VoiceDictationTool:
         self.playback = Playback()
         self.transcription = ""
         self.proper_nouns = []
+        self.proper_nouns_enabled = proper_nouns
 
     def start_recording(self):
         """Start recording the user's voice for the dictated text."""
@@ -38,7 +40,19 @@ class VoiceDictationTool:
             print(f"Transcription: {self.transcription}")
             self.proper_nouns = self.ner_manager.extract_proper_nouns(self.transcription)
             print(f"Proper Nouns: {self.proper_nouns}")
-            self.playback.playback_transcription(self.transcription)
+
+            if self.proper_nouns_enabled == 0:
+                self.playback.playback_transcription(self.transcription)
+            elif self.proper_nouns_enabled == 1:
+                self.playback.playback_transcription(self.transcription)
+                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
+            elif self.proper_nouns_enabled == 2:
+                self.playback.playback_transcription(self.transcription)
+                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
+                for noun in self.proper_nouns:
+                    spelled_out = spell_out(noun)
+                    self.playback.playback_transcription(f"Spelling of {noun} is {spelled_out}")
+
             self.playback.cleanup()
         else:
             print("Transcription failed.")

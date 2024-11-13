@@ -5,15 +5,17 @@ class NERManager:
     """Class for managing Named Entity Recognition and memory of proper nouns."""
 
     def __init__(self):
-        
         self.memory = {}
 
     def extract_proper_nouns(self, transcription):
         prompt = (
-            "Extract all proper nouns from the following text and return them in a list:\n"
+            "You are a proper noun extractor. Extract all proper nouns from the following text and return them in a list:\n"
             f"{transcription}\n"
-            "Please return only the proper nouns."
-            "For example, if the text is John and Mary are students at Stanford, you would return just: ['John', 'Mary', 'Stanford']."
+            "Please return only the proper nouns, with no additional words."
+            "Here are 3 examples:"
+            "If the text is John and Mary are students at Stanford, you would return: ['John', 'Mary', 'Stanford']."
+            "If the text is Vikram and Sanjay are brothers from Brooklyn, New York, you would return: ['Vikram', 'Sanjay', 'Brooklyn', 'New York']."
+            "If the text is There are no proper nouns in this sentence, you would return: []."
         )
         response = self.call_gpt_api(prompt)
         if response:

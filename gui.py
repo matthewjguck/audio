@@ -3,11 +3,12 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from PyQt5.QtCore import QTimer, QUrl
 from PyQt5.QtGui import QColor
 from backend.api import VoiceDictationTool
+import argparse
 
 class VoiceDictationToolGUI(QWidget):
     """GUI for Voice Dictation Tool with NER functionality."""
 
-    def __init__(self):
+    def __init__(self, proper_nouns=False):
         super().__init__()
         self.dictation_tool = VoiceDictationTool()  # Instantiate the voice dictation tool
         self.is_recording = False  # Track whether we are recording
@@ -55,7 +56,7 @@ class VoiceDictationToolGUI(QWidget):
         # Radio buttons
         self.radio_button1 = QRadioButton("Repeat Only")
         self.radio_button2 = QRadioButton("Repeat + Noun Check")
-        self.radio_button3 = QRadioButton("Noun Check Only")
+        self.radio_button3 = QRadioButton("Repeat + Noun Check + Spelling")
 
         # Group radio buttons together for exclusive selection
         self.radio_group = QButtonGroup(self)
@@ -103,6 +104,13 @@ class VoiceDictationToolGUI(QWidget):
 
     def on_recording_finished(self):
         """Handle the process after recording is finished."""
+        if self.radio_button2.isChecked():  # Repeat + Noun Check
+            self.dictation_tool.proper_nouns_enabled = 1  # Transcription + Noun Check
+        elif self.radio_button1.isChecked():  # Repeat Only
+            self.dictation_tool.proper_nouns_enabled = 0  # Transcription only
+        elif self.radio_button3.isChecked():  # Noun Check Only
+            self.dictation_tool.proper_nouns_enabled = 2  # Noun Check only
+        
         # Stop recording and get the transcription and proper nouns
         transcription, proper_nouns = self.dictation_tool.stop_recording()
 
@@ -120,7 +128,6 @@ class VoiceDictationToolGUI(QWidget):
         self.busy_indicator.setVisible(False)
         self.start_button.setText('Start')  # Change button text back to "Start"
         self.start_button.setEnabled(True)  # Re-enable the button
-
 
     def format_transcription(self, text):
         """Format the transcribed text to make each word clickable."""
