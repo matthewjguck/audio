@@ -56,7 +56,7 @@ class VoiceDictationToolGUI(QWidget):
         # Radio buttons
         self.radio_button1 = QRadioButton("Repeat Only")
         self.radio_button2 = QRadioButton("Repeat + Noun Check")
-        self.radio_button3 = QRadioButton("Noun Check Only")
+        self.radio_button3 = QRadioButton("Repeat + Noun Check + Spelling")
 
         # Group radio buttons together for exclusive selection
         self.radio_group = QButtonGroup(self)

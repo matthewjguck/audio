@@ -5,6 +5,7 @@ from .transcriber import Transcriber
 from .ner_manager import NERManager
 from .playback import Playback
 import google.generativeai as genai
+from .utils import spell_out 
 
 # Load environment variables
 load_dotenv()
@@ -46,8 +47,12 @@ class VoiceDictationTool:
                 self.playback.playback_transcription(self.transcription)
                 self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
             elif self.proper_nouns_enabled == 2:
+                self.playback.playback_transcription(self.transcription)
                 self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
-                
+                for noun in self.proper_nouns:
+                    spelled_out = spell_out(noun)
+                    self.playback.playback_transcription(f"Spelling of {noun} is {spelled_out}")
+
             self.playback.cleanup()
         else:
             print("Transcription failed.")
