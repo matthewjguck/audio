@@ -1,8 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTextBrowser, QProgressBar, QLabel, QRadioButton, QButtonGroup
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QVBoxLayout, QHBoxLayout, QPushButton, QTextBrowser, QProgressBar, QLabel, QRadioButton, QButtonGroup
 from PyQt5.QtCore import QTimer, QUrl
 from PyQt5.QtGui import QColor
 from backend.api import VoiceDictationTool
+import speech_recognition
 import argparse
 
 class VoiceDictationToolGUI(QWidget):
@@ -14,6 +15,7 @@ class VoiceDictationToolGUI(QWidget):
         self.is_recording = False  # Track whether we are recording
         self.initUI()
         self.marked_words = set()  # Set to track which words have been marked
+        self.selected_mic_index = None #for microphone
 
     def initUI(self):
         """Set up the GUI layout."""
@@ -68,6 +70,10 @@ class VoiceDictationToolGUI(QWidget):
         bottom_layout.addWidget(self.radio_button1)
         bottom_layout.addWidget(self.radio_button2)
         bottom_layout.addWidget(self.radio_button3)
+        
+        # Microphone selection dropdown
+        self.mic_dropdown = QComboBox(self)
+        self.list_microphones() # Populate with available microphones
 
         # Add the bottom layout to the main layout
         layout.addLayout(bottom_layout)
@@ -75,6 +81,16 @@ class VoiceDictationToolGUI(QWidget):
         # Set the layout to the window
         self.setLayout(layout)
         self.setGeometry(300, 300, 400, 400)
+
+    def list_microphones(self):
+        """List available microphones & dropdown menu"""
+        mic_list = speech_recognition.Microphone.list_microphone_names()
+        self.mic_dropdown.addItems(mic_list)
+
+    def on_mic_selected(self):
+        """ Microphone selection."""
+        self.selected_mic_index = self.mic_dropdown.currentIndex()
+        print(f"Selected microphone index: {self.selected_mic_index}")
 
     def on_start_stop_click(self):
         """Handle the Start/Stop button click."""
