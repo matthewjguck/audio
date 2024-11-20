@@ -14,7 +14,7 @@ class Playback:
         self.audio_file_mp3 = "transcription_playback.mp3"
         self.audio_file_wav = "transcription_playback.wav"
 
-    def text_to_speech(self, text):
+    def text_to_speech(self, text, speed):
         """Convert text to speech and save it as an MP3 file, then convert to WAV."""
         # Generate speech and save as MP3
         tts = gtts.gTTS(text=text, lang='en')
@@ -22,6 +22,8 @@ class Playback:
 
         # Convert MP3 to WAV
         sound = pydub.AudioSegment.from_mp3(self.audio_file_mp3)
+        if speed != 1.0:
+            sound = sound.speedup(playback_speed=speed)
         sound.export(self.audio_file_wav, format="wav")
 
     def play_audio(self):
@@ -50,7 +52,7 @@ class Playback:
 
     def playback_transcription(self, text):
         """Convert text to speech, convert format, and play it back."""
-        self.text_to_speech(text)
+        self.text_to_speech(text, speed=1.3)
         self.play_audio()
 
     def cleanup(self):

@@ -45,13 +45,13 @@ class VoiceDictationTool:
                 self.playback.playback_transcription(self.transcription)
             elif self.proper_nouns_enabled == 1:
                 self.playback.playback_transcription(self.transcription)
-                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
+                self.playback.playback_transcription('Proper nouns are: ' + ', '.join(self.proper_nouns))
             elif self.proper_nouns_enabled == 2:
                 self.playback.playback_transcription(self.transcription)
-                self.playback.playback_transcription('The Proper nouns are: ' + ', '.join(self.proper_nouns))
+                self.playback.playback_transcription('Proper nouns are: ' + ', '.join(self.proper_nouns))
                 for noun in self.proper_nouns:
                     spelled_out = spell_out(noun)
-                    self.playback.playback_transcription(f"Spelling of {noun} is {spelled_out}")
+                    self.playback.playback_transcription(f"{noun} is {spelled_out}")
 
             self.playback.cleanup()
         else:
