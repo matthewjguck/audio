@@ -13,9 +13,11 @@ class VoiceDictationToolGUI(QWidget):
         super().__init__()
         self.dictation_tool = VoiceDictationTool()  # Instantiate the voice dictation tool
         self.is_recording = False  # Track whether we are recording
+        self.is_fix_recording = False  # Track whether we are fix recording
         self.initUI()
         self.marked_words = set()  # Set to track which words have been marked
-        self.selected_mic_index = None #for microphone
+        self.selected_mic_index = None  # For microphone
+        self.transcription = ""  # Store the original transcription
 
     def initUI(self):
         """Set up the GUI layout."""
@@ -42,6 +44,12 @@ class VoiceDictationToolGUI(QWidget):
         self.start_button.clicked.connect(self.on_start_stop_click)  # Connect to start/stop recording
         layout.addWidget(self.start_button)
 
+        # Fix button
+        self.fix_button = QPushButton('Fix', self)
+        self.fix_button.clicked.connect(self.on_fix_button_click)  # Connect to fix recording
+        self.fix_button.setEnabled(False)  # Disable until transcription is available
+        layout.addWidget(self.fix_button)
+
         # Busy indicator (Progress bar used as a visual indicator)
         self.busy_indicator = QProgressBar(self)
         self.busy_indicator.setRange(0, 0)  # Makes it indefinite (busy indicator)
@@ -59,6 +67,7 @@ class VoiceDictationToolGUI(QWidget):
         self.radio_button1 = QRadioButton("Repeat Only")
         self.radio_button2 = QRadioButton("Repeat + Noun Check")
         self.radio_button3 = QRadioButton("Repeat + Noun Check + Spelling")
+        self.radio_button1.setChecked(True)  # Default selection
 
         # Group radio buttons together for exclusive selection
         self.radio_group = QButtonGroup(self)
@@ -70,17 +79,18 @@ class VoiceDictationToolGUI(QWidget):
         bottom_layout.addWidget(self.radio_button1)
         bottom_layout.addWidget(self.radio_button2)
         bottom_layout.addWidget(self.radio_button3)
-        
-        # Microphone selection dropdown
-        self.mic_dropdown = QComboBox(self)
-        self.list_microphones() # Populate with available microphones
+
+        # Microphone selection dropdown (optional)
+        # self.mic_dropdown = QComboBox(self)
+        # self.list_microphones()  # Populate with available microphones
+        # layout.addWidget(self.mic_dropdown)
 
         # Add the bottom layout to the main layout
         layout.addLayout(bottom_layout)
 
         # Set the layout to the window
         self.setLayout(layout)
-        self.setGeometry(300, 300, 400, 400)
+        self.setGeometry(300, 300, 400, 500)
 
     def list_microphones(self):
         """List available microphones & dropdown menu"""
@@ -88,7 +98,7 @@ class VoiceDictationToolGUI(QWidget):
         self.mic_dropdown.addItems(mic_list)
 
     def on_mic_selected(self):
-        """ Microphone selection."""
+        """Microphone selection."""
         self.selected_mic_index = self.mic_dropdown.currentIndex()
         print(f"Selected microphone index: {self.selected_mic_index}")
 
@@ -124,11 +134,12 @@ class VoiceDictationToolGUI(QWidget):
             self.dictation_tool.proper_nouns_enabled = 1  # Transcription + Noun Check
         elif self.radio_button1.isChecked():  # Repeat Only
             self.dictation_tool.proper_nouns_enabled = 0  # Transcription only
-        elif self.radio_button3.isChecked():  # Noun Check Only
-            self.dictation_tool.proper_nouns_enabled = 2  # Noun Check only
-        
+        elif self.radio_button3.isChecked():  # Repeat + Noun Check + Spelling
+            self.dictation_tool.proper_nouns_enabled = 2  # Noun Check + Spelling
+
         # Stop recording and get the transcription and proper nouns
         transcription, proper_nouns = self.dictation_tool.stop_recording()
+        self.transcription = transcription  # Store the original transcription
 
         # Format transcription into clickable words
         formatted_text = self.format_transcription(transcription) if transcription else "Transcription failed."
@@ -139,6 +150,9 @@ class VoiceDictationToolGUI(QWidget):
         # Display proper nouns below transcription
         proper_nouns_text = ', '.join(proper_nouns) if proper_nouns else "No proper nouns detected."
         self.proper_nouns_text.setText(proper_nouns_text)
+
+        # Enable the Fix button since we have a transcription
+        self.fix_button.setEnabled(True)
 
         # Hide the busy indicator and re-enable the button
         self.busy_indicator.setVisible(False)
@@ -190,10 +204,54 @@ class VoiceDictationToolGUI(QWidget):
                 # Make the word clickable if not marked
                 formatted_words.append(f'<a href="{idx}">{word}</a>')
 
-        rate = len(self.marked_words)/len(words) * 100
-        self.wer_label.setText(f'WER: {rate}')
+        rate = len(self.marked_words) / len(words) * 100 if words else 0
+        self.wer_label.setText(f'WER: {rate:.2f}%')
         return ' '.join(formatted_words)
 
+    def on_fix_button_click(self):
+        """Handle the Fix button click."""
+        if self.is_fix_recording:
+            # If already recording, stop the fix recording
+            self.on_fix_stop()
+        else:
+            # If not recording, start the fix recording
+            self.on_fix_start()
+
+    def on_fix_start(self):
+        """Handle the Fix button click to begin fix recording."""
+        self.is_fix_recording = True
+        self.fix_button.setText('Stop Fix')  # Change button text to "Stop Fix"
+        self.busy_indicator.setVisible(True)  # Show busy indicator
+
+        # Start the fix recording
+        self.dictation_tool.start_fix_recording()
+
+    def on_fix_stop(self):
+        """Handle the Fix button click to stop fix recording."""
+        self.is_fix_recording = False
+        self.fix_button.setEnabled(False)  # Disable button to prevent multiple clicks
+
+        # Stop the fix recording and process it
+        QTimer.singleShot(100, self.on_fix_recording_finished)  # Delay before processing
+
+    def on_fix_recording_finished(self):
+        """Handle the process after fix recording is finished."""
+        # Stop recording and get the fix transcription and corrected transcription
+        corrected_transcription = self.dictation_tool.process_fix(self.transcription)
+        if corrected_transcription:
+            # Update the text box with the corrected transcription
+            formatted_text = self.format_transcription(corrected_transcription)
+            self.output_text.setHtml(formatted_text)
+
+            # Update self.transcription with the corrected transcription
+            self.transcription = corrected_transcription
+        else:
+            self.output_text.setHtml("Correction failed.")
+
+        # Hide the busy indicator and re-enable the button
+        self.busy_indicator.setVisible(False)
+        self.fix_button.setText('Fix')  # Change button text back to "Fix"
+        self.fix_button.setEnabled(True)  # Re-enable the button
 
 # Main execution for running the GUI
 if __name__ == "__main__":

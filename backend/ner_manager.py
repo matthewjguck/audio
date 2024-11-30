@@ -13,14 +13,15 @@ class NERManager:
             f"{transcription}\n"
             "Please return only the proper nouns, with no additional words."
             "Here are 3 examples:"
-            "If the text is John and Mary are students at Stanford, you would return: ['John', 'Mary', 'Stanford']."
-            "If the text is Vikram and Sanjay are brothers from Brooklyn, New York, you would return: ['Vikram', 'Sanjay', 'Brooklyn', 'New York']."
-            "If the text is There are no proper nouns in this sentence, you would return: []."
+            "If the text is 'John and Mary are students at Stanford', you would return: ['John', 'Mary', 'Stanford']."
+            "If the text is 'Vikram and Sanjay are brothers from Brooklyn, New York', you would return: ['Vikram', 'Sanjay', 'Brooklyn', 'New York']."
+            "If the text is 'There are no proper nouns in this sentence', you would return: []."
         )
         response = self.call_gpt_api(prompt)
         if response:
-            proper_nouns = response.split(", ")
-            proper_nouns = [noun.strip() for noun in proper_nouns if noun]
+            # Remove brackets and split by commas
+            proper_nouns = response.replace('[', '').replace(']', '').replace("'", "").split(",")
+            proper_nouns = [noun.strip() for noun in proper_nouns if noun.strip()]
             self.update_memory(proper_nouns)
             return proper_nouns
         else:
@@ -40,7 +41,25 @@ class NERManager:
     def update_memory(self, proper_nouns):
         for noun in proper_nouns:
             self.memory[noun] = self.memory.get(noun, 0) + 1
-    
+
     def clear_memory(self):
         """Clear the memory of proper nouns."""
         self.memory = {}
+
+    def correct_transcription(self, original_transcription, fix_transcription):
+        """Use LLM to correct the original transcription based on fix transcription."""
+        prompt = (
+            "You are an assistant that corrects transcriptions based on user's corrections.\n"
+            "Given the original transcription and the user's correction, output the corrected transcription.\n"
+            "Make minimal changes needed to the original transcription to incorporate the corrections.\n"
+            f"Original transcription: \"{original_transcription}\"\n"
+            f"User's correction: \"{fix_transcription}\"\n"
+            "Corrected transcription:"
+        )
+        response = self.call_gpt_api(prompt)
+        if response:
+            corrected_transcription = response.strip()
+            return corrected_transcription
+        else:
+            print("No response received from LLM for correction.")
+            return original_transcription

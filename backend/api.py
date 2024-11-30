@@ -5,7 +5,7 @@ from .transcriber import Transcriber
 from .ner_manager import NERManager
 from .playback import Playback
 import google.generativeai as genai
-from .utils import spell_out 
+from .utils import spell_out
 
 # Load environment variables
 load_dotenv()
@@ -52,8 +52,41 @@ class VoiceDictationTool:
                 for noun in self.proper_nouns:
                     spelled_out = spell_out(noun)
                     self.playback.playback_transcription(f"{noun} is {spelled_out}")
+                self.playback.playback_transcription('Is there anything you would like to fix?')
 
             self.playback.cleanup()
         else:
             print("Transcription failed.")
         return self.transcription, self.proper_nouns
+
+    def start_fix_recording(self):
+        """Start recording the user's voice for the fix."""
+        self.audio_recorder.start_fix_recording()
+
+    def process_fix(self, original_transcription):
+        """Process the fix recording to correct the original transcription."""
+        self.audio_recorder.stop_fix_recording()
+        self.audio_recorder.save_fix_audio()
+
+        fix_transcription = self.transcriber.transcribe_audio(self.audio_recorder.fix_audio_file)
+        if fix_transcription:
+            print(f"Fix Transcription: {fix_transcription}")
+
+            # Use LLM to correct the original transcription based on fix_transcription
+            self.corrected_transcription = self.ner_manager.correct_transcription(original_transcription, fix_transcription)
+            print(f"Corrected Transcription: {self.corrected_transcription}")
+
+            # Playback the corrected transcription
+            self.corrected_proper_nouns = self.ner_manager.extract_proper_nouns(self.corrected_transcription)
+            self.playback.playback_transcription(self.corrected_transcription)
+            self.playback.playback_transcription('Proper nouns are: ' + ', '.join(self.corrected_proper_nouns))
+            for noun in self.corrected_proper_nouns:
+                spelled_out = spell_out(noun)
+                self.playback.playback_transcription(f"{noun} is {spelled_out}")
+
+            self.playback.cleanup()
+        else:
+            print("Fix transcription failed.")
+            self.corrected_transcription = None
+
+        return self.corrected_transcription
